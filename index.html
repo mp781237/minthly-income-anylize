@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>月收入財務分析工具</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        font-family: "Inter", "Outfit", system-ui, -apple-system,
+          BlinkMacSystemFont, sans-serif;
+        color: #f5f8ff;
+        background: #040616;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 20% 20%, #4f46ef 0%, transparent 45%),
+          radial-gradient(circle at 80% 0%, #c084fc 0%, transparent 50%),
+          linear-gradient(135deg, #030616 0%, #0d0f28 50%, #1d1230 100%);
+        display: flex;
+        justify-content: center;
+        padding: 48px 16px 72px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      .bg-glow {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            circle at 30% 50%,
+            rgba(99, 102, 241, 0.3),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 70% 30%,
+            rgba(236, 72, 153, 0.25),
+            transparent 60%
+          );
+        filter: blur(120px);
+        z-index: 0;
+      }
+
+      .shell {
+        width: min(1200px, 100%);
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .glass {
+        background: rgba(13, 15, 40, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 28px;
+        box-shadow: 0 10px 50px rgba(2, 6, 23, 0.6);
+        backdrop-filter: blur(16px);
+        padding: 32px;
+      }
+
+      .hero-card {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .hero-card h1 {
+        font-family: "Outfit", "Inter", sans-serif;
+        font-size: clamp(32px, 5vw, 48px);
+        margin: 8px 0;
+      }
+
+      .eyebrow {
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 13px;
+      }
+
+      .subtitle {
+        color: rgba(245, 248, 255, 0.8);
+        line-height: 1.5;
+        max-width: 640px;
+      }
+
+      .hero-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .hero-metrics div {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .hero-metrics p {
+        margin: 0 0 6px;
+        color: rgba(245, 248, 255, 0.7);
+        font-size: 14px;
+      }
+
+      .hero-metrics span {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 0.9fr;
+        gap: 24px;
+      }
+
+      .form-card {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .result-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-size: 14px;
+        color: rgba(245, 248, 255, 0.85);
+      }
+
+      input {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f5f8ff;
+        font-size: 16px;
+        transition: background 0.2s, border 0.2s;
+      }
+
+      input:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .money-input {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .money-input span {
+        position: absolute;
+        left: 18px;
+        color: rgba(245, 248, 255, 0.6);
+        pointer-events: none;
+        font-size: 14px;
+      }
+
+      .money-input input {
+        padding-left: 58px;
+      }
+
+      .input-section {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .section-label {
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .input-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 16px;
+      }
+
+      .cashflow-panel {
+        border-radius: 20px;
+        padding: 18px 22px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .cashflow-panel p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+      }
+
+      .cashflow-panel strong {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .cashflow-panel small {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 12px;
+      }
+
+      .status-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .checklist {
+        display: grid;
+        gap: 12px;
+      }
+
+      .checklist div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .checklist span {
+        font-weight: 600;
+      }
+
+      .chart-card canvas {
+        width: 100%;
+        height: 260px;
+      }
+
+      @media (max-width: 1024px) {
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-card canvas {
+          height: 220px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 24px 12px 48px;
+        }
+
+        .glass {
+          padding: 24px;
+          border-radius: 22px;
+        }
+
+        .input-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" defer></script>
+  </head>
+  <body>
+    <div class="bg-glow"></div>
+    <main class="shell">
+      <header class="hero-card glass">
+        <div>
+          <p class="eyebrow">全新 50/30/20 理財檢測</p>
+          <h1>月收入財務分析工具</h1>
+          <p class="subtitle">
+            透過月收入與實際支出金額，立即掌握現金流、檢核比例並預測 20
+            年後的資產累積。
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <div>
+            <p>現金流狀態</p>
+            <span id="cashflowState">—</span>
+          </div>
+          <div>
+            <p>財務評語</p>
+            <span id="healthSummary">請輸入資料</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="content-grid">
+        <section class="form-card glass">
+          <h2>月度輸入</h2>
+
+          <div class="input-group">
+            <label for="income">月收入</label>
+            <div class="money-input">
+              <span>NT$</span>
+              <input
+                id="income"
+                type="number"
+                placeholder="60000"
+                min="0"
+                step="100"
+              />
+            </div>
+          </div>
+
+          <div class="input-section">
+            <p class="section-label">必要支出</p>
+            <div class="input-grid">
+              <div class="input-group">
+                <label for="rent">房租</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input id="rent" type="number" placeholder="20000" min="0" />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="food">伙食</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input id="food" type="number" placeholder="8000" min="0" />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="utilities">水電保險</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input
+                    id="utilities"
+                    type="number"
+                    placeholder="4000"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-section">
+            <p class="section-label">想要支出</p>
+            <div class="input-grid">
+              <div class="input-group">
+                <label for="entertainment">娛樂</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input
+                    id="entertainment"
+                    type="number"
+                    placeholder="5000"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="travel">旅遊購物</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input
+                    id="travel"
+                    type="number"
+                    placeholder="6000"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-section">
+            <p class="section-label">儲蓄／投資</p>
+            <div class="input-grid">
+              <div class="input-group">
+                <label for="investing">投資</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input
+                    id="investing"
+                    type="number"
+                    placeholder="7000"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="savings">存錢</label>
+                <div class="money-input">
+                  <span>NT$</span>
+                  <input
+                    id="savings"
+                    type="number"
+                    placeholder="5000"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="annualReturn">預估年化報酬 (%)</label>
+            <input
+              id="annualReturn"
+              type="number"
+              min="0"
+              step="0.5"
+              value="5"
+              placeholder="5"
+            />
+          </div>
+
+          <div class="cashflow-panel">
+            <div>
+              <p>剩餘現金流</p>
+              <strong id="cashflowAmount">NT$ 0</strong>
+            </div>
+            <small>扣除所有支出與儲蓄後的可運用金額</small>
+          </div>
+        </section>
+
+        <section class="result-stack">
+          <article class="glass status-card">
+            <h2>比例檢核</h2>
+            <div class="checklist">
+              <div>
+                <p>必要 &lt; 50%</p>
+                <span id="needsCheck">—</span>
+              </div>
+              <div>
+                <p>想要 &lt; 30%</p>
+                <span id="wantsCheck">—</span>
+              </div>
+              <div>
+                <p>儲蓄 &gt; 20%</p>
+                <span id="savingsCheck">—</span>
+              </div>
+              <div>
+                <p>剩餘現金流</p>
+                <span id="cashflowPercent">—</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass chart-card">
+            <h2>支出結構</h2>
+            <canvas id="pieChart"></canvas>
+          </article>
+
+          <article class="glass chart-card">
+            <h2>20 年資產預測</h2>
+            <canvas id="lineChart"></canvas>
+          </article>
+        </section>
+      </section>
+    </main>
+    <script>
+      const fields = [
+        "income",
+        "rent",
+        "food",
+        "utilities",
+        "entertainment",
+        "travel",
+        "investing",
+        "savings",
+        "annualReturn",
+      ];
+
+      const elements = {};
+
+      fields.forEach((id) => {
+        elements[id] = document.getElementById(id);
+        elements[id]?.addEventListener("input", updateDashboard);
+      });
+
+      const cashflowState = document.getElementById("cashflowState");
+      const healthSummary = document.getElementById("healthSummary");
+      const needsCheck = document.getElementById("needsCheck");
+      const wantsCheck = document.getElementById("wantsCheck");
+      const savingsCheck = document.getElementById("savingsCheck");
+      const cashflowAmount = document.getElementById("cashflowAmount");
+      const cashflowPercent = document.getElementById("cashflowPercent");
+
+      let pieChart;
+      let lineChart;
+
+      function readValue(el) {
+        const value = parseFloat(el?.value);
+        return Number.isFinite(value) ? Math.max(0, value) : 0;
+      }
+
+      function formatCurrency(value) {
+        return `NT$ ${Math.round(value).toLocaleString("zh-TW")}`;
+      }
+
+      function updateDashboard() {
+        const income = readValue(elements.income);
+        const needs =
+          readValue(elements.rent) +
+          readValue(elements.food) +
+          readValue(elements.utilities);
+        const wants =
+          readValue(elements.entertainment) + readValue(elements.travel);
+        const savings =
+          readValue(elements.investing) + readValue(elements.savings);
+        const annualReturn = readValue(elements.annualReturn);
+
+        const totalOutflow = needs + wants + savings;
+
+        const cashflow = income - totalOutflow;
+        cashflowState.textContent =
+          income === 0 ? "尚無資料" : cashflow >= 0 ? "正常" : "透支";
+        cashflowState.style.color = cashflow >= 0 ? "#4ade80" : "#fb7185";
+        cashflowAmount.textContent = income === 0 ? "—" : formatCurrency(cashflow);
+        cashflowAmount.style.color = cashflow >= 0 ? "#4ade80" : "#fb7185";
+
+        const pct = (part) =>
+          income > 0 ? ((part / income) * 100).toFixed(1) : "0.0";
+        const needsPct = income ? (needs / income) * 100 : 0;
+        const wantsPct = income ? (wants / income) * 100 : 0;
+        const savingsPct = income ? (savings / income) * 100 : 0;
+        const cashflowPct = income ? (cashflow / income) * 100 : 0;
+
+        setCheck(needsCheck, needsPct < 50, `${pct(needs)}%`);
+        setCheck(wantsCheck, wantsPct < 30, `${pct(wants)}%`);
+        setCheck(savingsCheck, savingsPct > 20, `${pct(savings)}%`);
+        setCheck(
+          cashflowPercent,
+          cashflow >= 0,
+          `${income ? cashflowPct.toFixed(1) : "0.0"}%`
+        );
+
+        healthSummary.textContent = buildSummary({
+          income,
+          needsPct,
+          wantsPct,
+          savingsPct,
+          cashflow,
+        });
+
+        drawPie(needs, wants, savings);
+        drawLineChart(savings, annualReturn);
+      }
+
+      function setCheck(el, pass, label) {
+        el.textContent = label;
+        el.style.color = pass ? "#4ade80" : "#fb923c";
+      }
+
+      function buildSummary({ income, needsPct, wantsPct, savingsPct, cashflow }) {
+        if (income === 0) return "輸入月收入與支出後即可取得分析。";
+        if (cashflow < 0)
+          return "支出高於收入，請優先壓低必要或想要支出。";
+        if (savingsPct >= 30) return "儲蓄優異，持續保持保守支出節奏。";
+        if (needsPct >= 55) return "固定支出偏高，考慮檢視房租或水電保險。";
+        if (wantsPct >= 35) return "想要支出超過建議，設定月度娛樂上限。";
+        if (savingsPct < 20) return "儲蓄不足，建議預留更多現金或投資。";
+        return "支出結構健康，現金流穩定。";
+      }
+
+      function drawPie(needs, wants, savings) {
+        const ctx = document.getElementById("pieChart")?.getContext("2d");
+        if (!ctx || !window.Chart) return;
+        const data = [needs, wants, savings];
+
+        if (pieChart) pieChart.destroy();
+
+        pieChart = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: ["必要", "想要", "儲蓄"],
+            datasets: [
+              {
+                data,
+                backgroundColor: ["#60a5fa", "#f472b6", "#34d399"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                labels: { color: "#f8fafc" },
+              },
+            },
+          },
+        });
+      }
+
+      function drawLineChart(monthlySavings, annualReturn) {
+        const ctx = document.getElementById("lineChart")?.getContext("2d");
+        if (!ctx || !window.Chart) return;
+
+        const years = 20;
+        const points = [];
+        const labels = [];
+        const monthlyRate =
+          annualReturn > 0
+            ? Math.pow(1 + annualReturn / 100, 1 / 12) - 1
+            : 0;
+        let balance = 0;
+
+        for (let year = 1; year <= years; year++) {
+          for (let month = 0; month < 12; month++) {
+            balance = balance * (1 + monthlyRate) + monthlySavings;
+          }
+          labels.push(`${year} 年`);
+          points.push(Math.round(balance));
+        }
+
+        if (lineChart) lineChart.destroy();
+
+        lineChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "累積資產",
+                data: points,
+                borderColor: "#a78bfa",
+                backgroundColor: "rgba(167, 139, 250, 0.3)",
+                tension: 0.35,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                labels: { color: "#f8fafc" },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) =>
+                    `NT$ ${context.parsed.y.toLocaleString("zh-TW")}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: "#cbd5f5" },
+                grid: { color: "rgba(255,255,255,0.08)" },
+              },
+              y: {
+                ticks: {
+                  color: "#cbd5f5",
+                  callback: (value) =>
+                    `NT$ ${Number(value).toLocaleString("zh-TW")}`,
+                },
+                grid: { color: "rgba(255,255,255,0.08)" },
+              },
+            },
+          },
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", updateDashboard);
+    </script>
+  </body>
+</html>
+
